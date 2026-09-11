@@ -161,40 +161,40 @@ function renderHistory() {
   });
 }
 
-// 6. Integración de Text-to-Speech (ElevenLabs)
-async function playTTS(text) {
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio = null;
+/// Reemplazo de la función playTTS usando Web Speech API nativa
+function playTTS(text) {
+  if (!('speechSynthesis' in window)) {
+    alert("Tu navegador no soporta síntesis de voz.");
+    return;
   }
+
+  // Si ya está reproduciendo, detener
+  if (window.speechSynthesis.speaking) {
+    window.speechSynthesis.cancel();
+  }
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  
+  // Detectar idioma según la interfaz o el prompt
+  const detectedLang = document.getElementById('langBadge').innerText.includes("Inglés") ? "en-US" : "es-ES";
+  utterance.lang = detectedLang;
+  utterance.rate = 1.0;
+  utterance.pitch = 1.0;
 
   btnAudio.disabled = true;
-  btnAudio.innerText = "Cargando audio...";
+  btnAudio.innerText = "Reproduciendo...";
 
-  try {
-    const res = await fetch(`${API_URL}/tts`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text })
-    });
-
-    if (!res.ok) throw new Error("No se pudo obtener el audio de ElevenLabs");
-
-    const audioBlob = await res.blob();
-    const audioUrl = URL.createObjectURL(audioBlob);
-    
-    currentAudio = new Audio(audioUrl);
-    currentAudio.play();
-
-    currentAudio.onended = () => {
-      btnAudio.disabled = false;
-      btnAudio.innerText = "Escuchar Prompt";
-    };
-  } catch (err) {
-    alert(err.message);
+  utterance.onend = () => {
     btnAudio.disabled = false;
     btnAudio.innerText = "Escuchar Prompt";
-  }
+  };
+
+  utterance.onerror = () => {
+    btnAudio.disabled = false;
+    btnAudio.innerText = "Escuchar Prompt";
+  };
+
+  window.speechSynthesis.speak(utterance);
 }
 
 // 7. Event Listeners

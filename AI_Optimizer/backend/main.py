@@ -5,6 +5,8 @@ import time
 import asyncio
 import httpx
 import traceback
+import edge_tts
+import io
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -338,31 +340,22 @@ async def analyze_prompt(payload: PromptAnalysisRequest):
             )
 
 
+
+
 @app.post("/api/tts")
 async def text_to_speech(data: dict):
-    eleven_key = os.getenv("ELEVENLABS_API_KEY")
-    if not eleven_key:
-        raise HTTPException(status_code=500, detail="ELEVENLABS_API_KEY no configurada.")
-
     text = data.get("text", "").strip()
     if not text:
-        raise HTTPException(status_code=400, detail="El campo 'text' no puede estar vacío.")
+        raise HTTPException(status_code=400, detail="El texto no puede estar vacío.")
 
-    voice_id = "21m00Tcm4TlvDq8ikWAM"
-    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
-    headers = {
-        "xi-api-key": eleven_key.strip().strip('"').strip("'"),
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "text": text,
-        "model_id": "eleven_multilingual_v2",
-        "voice_settings": {"stability": 0.5, "similarity_boost": 0.75}
-    }
+    # Voz neural natural en español (ej. es-ES-AlvaroNeural o es-MX-DaliaNeural)
+    voice = "es-ES-AlvaroNeural"
+    communicate = edge_tts.Communicate(text, voice)
 
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        res = await client.post(url, json=payload, headers=headers)
-        if res.status_code != 200:
-            raise HTTPException(status_code=res.status_code, detail=f"ElevenLabs error: {res.text}")
+    audio_stream = io.BytesIO()
+    async for chunk in communicate.stream():
+        if chunk["type"] == "audio":
+            audio_stream.write(chunk["data"])
 
-        return Response(content=res.content, media_type="audio/mpeg")
+    audio_stream.seek(0)
+    return Response(content=audio_stream.read(), media_type="audio/mpeg")

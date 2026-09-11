@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Consola de Análisis</title>
+  <link rel="stylesheet" href="./src/styles.css">
+</head>
+<body>
+  <main class="console-container">
+    <header class="header">
+      <h2>CONSOLA DE ANÁLISIS</h2>
+      <span class="engine-tag" id="engineTag">motor: openai/gpt-oss-20b (groq / instantáneo)</span>
+    </header>
+
+    <section class="input-section">
+      <textarea id="promptInput" placeholder="Hazme una publicación sobre inteligencia artificial..."></textarea>
+      <div class="actions">
+        <button id="btnAnalyze">Analizar Prompt</button>
+        <button id="btnImprove" disabled>Seguir Mejorando</button>
+        <button id="btnAudio" disabled>Escuchar Prompt</button>
+      </div>
+    </section>
+
+    <section class="metrics-grid" id="metricsContainer">
+      <!-- Generado dinámicamente -->
+    </section>
+
+    <div class="badges-row">
+      <div class="badge" id="roleBadge">Rol detectado: <strong>-</strong></div>
+      <div class="badge" id="typeBadge">Tipo de prompt: <strong>-</strong></div>
+      <div class="badge" id="langBadge">Idioma: <strong>-</strong></div>
+    </div>
+
+    <section class="suggestions-box">
+      <h3>SUGERENCIAS</h3>
+      <p id="suggestionText">Introduce un prompt y haz clic en Analizar.</p>
+    </section>
+
+    <section class="history-box">
+      <h3>HISTORIAL RECIENTE</h3>
+      <ul id="historyList"></ul>
+    </section>
+  </main>
+  <script src="./src/app.js"></script>
+</body>
+</html>

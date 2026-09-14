@@ -14,6 +14,10 @@ import edge_tts
 import io
 from dotenv import load_dotenv
 
+# Asegurar carga de .env desde el directorio raíz del proyecto y backend
+ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+if os.path.exists(ENV_PATH):
+    load_dotenv(ENV_PATH)
 load_dotenv()
 
 from fastapi import FastAPI, HTTPException
@@ -63,7 +67,7 @@ def calculate_token_savings(input_tokens: int, output_tokens: int) -> dict:
     }
 
 GROQ_MODEL = "openai/gpt-oss-20b"
-GEMINI_MODEL = "gemini-3.5-flash"
+GEMINI_MODEL = "gemini-3.6-flash"
 MAX_GRACE_TIME = 2.5   # si Groq no responde en este lapso, se lanza el respaldo Gemini
 MAX_ANALYSIS_TIME = 25.0  # deadline total del bloque cloud: nunca superar este tiempo
 
@@ -115,11 +119,16 @@ Reglas lingüísticas y de contenido:
 3. "tipo_prompt": Debe ser estrictamente uno de los siguientes valores: "Zero-Shot", "Few-Shot" o "Chain-of-Thought".
 4. "formato_salida": Respeta el formato solicitado o deduce el más adecuado: "Markdown", "JSON", "Texto Estructurado", "Código" o "Tabla".
 5. "prompt_mejorado" NUNCA debe ser una plantilla genérica corta ni un resumen superficial. Debe ser un prompt profesional, completo y estructurado con claridad meridiana usando secciones delimitadas:
-   - # ROL Y EXPERTIS: Define con precisión quién es la IA y su estándar de ejecución.
+   - # ROL Y EXPERTOS: Define con precisión quién es la IA y su estándar de ejecución.
    - # CONTEXTO Y OBJETIVO: Contexto situacional y meta principal.
    - # DIRECTIVAS PASO A PASO: Instrucciones detalladas de cómo abordar la tarea.
    - # RESTRICCIONES Y CASOS BORDE: Qué evitar, límites de extensión y prohibiciones estrictas.
-   - # ESQUEMA O FORMATO DE RESPUESTA: La estructura visual/sintáctica exacta en que debe responder.
+   - # ESQUEMA O FORMATO DE RESPUESTA: La estructura visual/sintáctica exacta en que debe responder según "formato_salida":
+     * Si "formato_salida" es "Tabla": DEBES modelar explícitamente una plantilla de tabla Markdown con columnas delimitadas por pipes (| Columna 1 | Columna 2 |) y divisores (|---|---|).
+     * Si "formato_salida" es "Código": DEBES ordenar la entrega en bloques de código delimitados (```lenguaje ... ```) o funciones técnicas.
+     * Si "formato_salida" es "JSON": DEBES definir el esquema estricto de claves y valores JSON entre llaves { ... }.
+     * Si "formato_salida" es "Texto Estructurado": DEBES estructurar la respuesta en pasos numerados secuenciales (1. 2. 3.).
+     * Si "formato_salida" es "Markdown": DEBES estructurar con encabezados jerárquicos (#, ##), listas y negritas.
 
 Estructura JSON requerida:
 {

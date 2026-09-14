@@ -42,12 +42,12 @@ export const confirmAction = async (title: string, text: string, confirmText: st
   return result.isConfirmed;
 };
 
-export const showErrorAlert = (title: string, text: string) => {
+export const showErrorAlert = (title: string, text: string, confirmButtonText: string = 'Entendido') => {
   return bentoSwal.fire({
     icon: 'error',
     title,
     text,
-    confirmButtonText: 'Entendido',
+    confirmButtonText,
     iconColor: '#ef4444',
   });
 };

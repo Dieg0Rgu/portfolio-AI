@@ -60,3 +60,16 @@ export interface HistoryItem extends AnalysisResponse {
 }
 
 export type Language = 'es' | 'en';
+
+export type OutputFormat = 'Markdown' | 'JSON' | 'Texto Estructurado' | 'Código' | 'Tabla';
+
+export type ViewMode = 'formatted' | 'raw';
+
+export interface OutputFormatOption {
+  id: OutputFormat;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  description: string;
+}
+
+export type MetricKey = keyof PromptScores;

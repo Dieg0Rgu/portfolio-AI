@@ -1,3 +1,4 @@
+// AI Optimizer - Vanilla / Module UI Logic
 const API_URL = "http://localhost:8000/api";
 
 // Estado de la aplicación
@@ -16,39 +17,94 @@ const metrics = [
   "calidad_general"
 ];
 
-// Nodos del DOM
-const promptInput = document.getElementById("promptInput");
-const btnAnalyze = document.getElementById("btnAnalyze");
-const btnImprove = document.getElementById("btnImprove");
-const btnAudio = document.getElementById("btnAudio");
-const metricsContainer = document.getElementById("metricsContainer");
-const roleBadge = document.getElementById("roleBadge");
-const typeBadge = document.getElementById("typeBadge");
-const langBadge = document.getElementById("langBadge");
-const suggestionText = document.getElementById("suggestionText");
-const historyList = document.getElementById("historyList");
-const btnClearHistory = document.getElementById("btnClearHistory");
+// Nodos del DOM (inicializados de forma segura)
+let promptInput = null;
+let btnAnalyze = null;
+let btnImprove = null;
+let btnAudio = null;
+let metricsContainer = null;
+let roleBadge = null;
+let typeBadge = null;
+let langBadge = null;
+let suggestionText = null;
+let historyList = null;
+let btnClearHistory = null;
 
-// 1. Inicializar barras de progreso
-metricsContainer.innerHTML = metrics.map(m => `
-  <div class="metric-bar">
-    <div class="metric-header">
-      <span>${m.replace('_', ' ').toUpperCase()}</span>
-      <span id="val-${m}">0</span>
-    </div>
-    <div class="bar-track">
-      <div class="bar-fill" id="bar-${m}"></div>
-    </div>
-  </div>
-`).join("");
+function initDom() {
+  if (typeof document === "undefined") return;
+
+  promptInput = document.getElementById("promptInput");
+  btnAnalyze = document.getElementById("btnAnalyze");
+  btnImprove = document.getElementById("btnImprove");
+  btnAudio = document.getElementById("btnAudio");
+  metricsContainer = document.getElementById("metricsContainer");
+  roleBadge = document.getElementById("roleBadge");
+  typeBadge = document.getElementById("typeBadge");
+  langBadge = document.getElementById("langBadge");
+  suggestionText = document.getElementById("suggestionText");
+  historyList = document.getElementById("historyList");
+  btnClearHistory = document.getElementById("btnClearHistory");
+
+  if (metricsContainer) {
+    metricsContainer.innerHTML = metrics.map(m => `
+      <div class="metric-bar">
+        <div class="metric-header">
+          <span>${m.replace('_', ' ').toUpperCase()}</span>
+          <span id="val-${m}">0</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" id="bar-${m}"></div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  if (btnAnalyze && promptInput) {
+    btnAnalyze.addEventListener("click", () => {
+      const text = promptInput.value.trim();
+      if (!text) return;
+      iterationCount = 1;
+      runAnalysis(text, iterationCount);
+    });
+  }
+
+  if (btnImprove && promptInput) {
+    btnImprove.addEventListener("click", () => {
+      const textToIterate = promptInput.value.trim() || currentImproved;
+      if (!textToIterate) return;
+      iterationCount++;
+      runAnalysis(textToIterate, iterationCount);
+    });
+  }
+
+  if (btnAudio && promptInput) {
+    btnAudio.addEventListener("click", () => {
+      const textToRead = promptInput.value.trim() || currentImproved || currentOriginal;
+      if (textToRead) {
+        playTTS(textToRead);
+      }
+    });
+  }
+
+  if (btnClearHistory) {
+    btnClearHistory.addEventListener("click", () => {
+      if (typeof localStorage !== "undefined") {
+        localStorage.removeItem("prompt_history");
+      }
+      renderHistory();
+    });
+  }
+
+  renderHistory();
+}
 
 // 2. Control de estado de carga en la UI
 function setLoading(isLoading, statusText = "Procesando...") {
-  btnAnalyze.disabled = isLoading;
-  btnImprove.disabled = isLoading || !currentImproved;
-  btnAudio.disabled = isLoading || (!currentImproved && !currentOriginal);
+  if (btnAnalyze) btnAnalyze.disabled = isLoading;
+  if (btnImprove) btnImprove.disabled = isLoading || !currentImproved;
+  if (btnAudio) btnAudio.disabled = isLoading || (!currentImproved && !currentOriginal);
 
-  if (isLoading) {
+  if (isLoading && suggestionText) {
     suggestionText.innerText = statusText;
   }
 }
@@ -58,105 +114,94 @@ async function runAnalysis(promptText, iteration) {
   setLoading(true, `Analizando prompt (Iteración ${iteration})...`);
 
   try {
-    const res = await fetch(`${API_URL}/analyze`, {
+    const response = await fetch(`${API_URL}/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        prompt: promptText,
-        iteration: iteration,
-        target_lang: "es"
-      })
+      body: JSON.stringify({ prompt: promptText, formato_salida: "Markdown" })
     });
 
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.detail || `Error del servidor (${res.status})`);
+    if (!response.ok) {
+      throw new Error(`Error en el servidor: ${response.statusText}`);
     }
 
-    const data = await res.json();
+    const data = await response.json();
+    currentOriginal = data.prompt_original;
+    currentImproved = data.prompt_mejorado;
+
     updateUI(data);
     saveToHistory(data);
-  } catch (err) {
-    alert(`Fallo en el análisis: ${err.message}`);
-    suggestionText.innerText = "Ocurrió un error al procesar el análisis.";
+  } catch (error) {
+    console.error("Error al procesar:", error);
+    if (suggestionText) {
+      suggestionText.innerText = `Error: ${error.message}. Asegúrate de que el backend está corriendo en ${API_URL}.`;
+    }
   } finally {
     setLoading(false);
   }
 }
 
-// 4. Actualización reactiva del dashboard
+// 4. Actualización de la interfaz
 function updateUI(data) {
-  currentOriginal = data.prompt_original;
-  currentImproved = data.prompt_mejorado;
+  if (roleBadge) roleBadge.innerText = `Rol: ${data.rol_detectado}`;
+  if (typeBadge) typeBadge.innerText = `Tipo: ${data.tipo_prompt}`;
+  if (langBadge) langBadge.innerText = `Idioma: ${data.idioma}`;
 
-  // Actualizar métricas visuales
-  for (const metric of metrics) {
-    const val = data.scores[metric] ?? 0;
-    const bar = document.getElementById(`bar-${metric}`);
-    const label = document.getElementById(`val-${metric}`);
-
-    if (bar && label) {
-      bar.style.width = `${Math.min(Math.max(val, 0), 100)}%`;
-      label.innerText = val;
-    }
+  // Actualizar métricas
+  if (data.scores) {
+    metrics.forEach(m => {
+      const val = data.scores[m] || 0;
+      const valEl = document.getElementById(`val-${m}`);
+      const barEl = document.getElementById(`bar-${m}`);
+      if (valEl) valEl.innerText = val;
+      if (barEl) barEl.style.width = `${val * 10}%`;
+    });
   }
 
-  // Actualizar metadatos
-  roleBadge.innerHTML = `Rol detectado: <strong>${data.rol_detectado}</strong>`;
-  typeBadge.innerHTML = `Tipo de prompt: <strong>${data.tipo_prompt}</strong>`;
-  langBadge.innerHTML = `Idioma: <strong>${data.idioma}</strong>`;
+  // Actualizar sugerencias y prompt optimizado
+  let content = `<strong>Sugerencias:</strong><br>${data.sugerencias.replace(/\n/g, '<br>')}`;
+  if (data.prompt_mejorado) {
+    content += `<br><br><strong>Prompt Optimizado:</strong><br><pre style="white-space: pre-wrap; font-family: monospace; color: var(--accent-mint); background: #080e10; padding: 0.5rem; border-radius: 4px;">${data.prompt_mejorado}</pre>`;
+  }
+  if (suggestionText) suggestionText.innerHTML = content;
 
-  // Mostrar sugerencias y prompt optimizado
-  suggestionText.innerHTML = `
-    <strong>Sugerencia:</strong> ${data.sugerencias}<br><br>
-    <strong>Prompt Optimizado:</strong> <em>"${data.prompt_mejorado}"</em>
-  `;
-
-  // Colocar el prompt mejorado en el textarea para permitir edición directa
-  promptInput.value = data.prompt_mejorado;
+  if (promptInput) {
+    promptInput.value = data.prompt_mejorado || data.prompt_original;
+  }
+  if (btnImprove) btnImprove.disabled = false;
+  if (btnAudio) btnAudio.disabled = false;
 }
 
-// 5. Gestión del Historial (LocalStorage)
-function saveToHistory(item) {
+// 5. Historial en LocalStorage
+function saveToHistory(data) {
+  if (typeof localStorage === "undefined") return;
   const history = JSON.parse(localStorage.getItem("prompt_history") || "[]");
-  
-  // Evitar duplicar el elemento idéntico consecutivo
   const newEntry = {
     id: Date.now(),
     date: new Date().toLocaleTimeString(),
-    ...item
+    ...data
   };
-
   history.unshift(newEntry);
-  localStorage.setItem("prompt_history", JSON.stringify(history.slice(0, 15)));
+  localStorage.setItem("prompt_history", JSON.stringify(history.slice(0, 10)));
   renderHistory();
 }
 
 function renderHistory() {
+  if (!historyList || typeof localStorage === "undefined") return;
   const history = JSON.parse(localStorage.getItem("prompt_history") || "[]");
-  
-  if (btnClearHistory) {
-    btnClearHistory.disabled = history.length === 0;
-  }
-
-  if (!historyList) return;
-
   if (history.length === 0) {
-    historyList.innerHTML = `<li style="color: var(--text-muted); list-style: none;">Sin análisis previos.</li>`;
+    historyList.innerHTML = `<li style="color: var(--text-muted); font-size: 0.8rem;">Sin historial reciente.</li>`;
     return;
   }
 
   historyList.innerHTML = history.map(item => `
     <li class="history-item" data-id="${item.id}" style="cursor: pointer; margin-bottom: 0.5rem;">
-      <span style="color: var(--accent-color);">[${item.date}]</span>
+      <span style="color: var(--accent-mint);">[${item.date}]</span>
       <strong>${item.rol_detectado}</strong> (${item.tipo_prompt}): 
       "${item.prompt_original.substring(0, 35)}..." 
-      <span style="color: var(--accent-color);">Score: ${item.scores.calidad_general}</span>
-      <span style="color: var(--accent-color); margin-left: 0.5rem;">Detalles: ${Object.entries(item.scores).map(([k,v])=>`${k}:${v}`).join(', ')}</span>
+      <span style="color: var(--accent-mint);">Score: ${item.scores ? item.scores.calidad_general : '-'}</span>
     </li>
   `).join("");
 
-  // Cargar registro al hacer clic en el historial
   historyList.querySelectorAll(".history-item").forEach(el => {
     el.addEventListener("click", () => {
       const selectedId = Number(el.dataset.id);
@@ -168,11 +213,12 @@ function renderHistory() {
   });
 }
 
-/// Función mejorada para reproducir el prompt usando el endpoint /api/tts del backend (FastTTS)
+// 6. Reproducción de audio TTS
 async function playTTS(text) {
-  // Desactivar botón mientras se carga y reproduce
-  btnAudio.disabled = true;
-  btnAudio.innerText = "Reproduciendo...";
+  if (btnAudio) {
+    btnAudio.disabled = true;
+    btnAudio.innerText = "Reproduciendo...";
+  }
 
   try {
     const response = await fetch(`${API_URL}/tts`, {
@@ -184,61 +230,51 @@ async function playTTS(text) {
       throw new Error(`Error al obtener audio (status ${response.status})`);
     }
 
-    // El backend devuelve audio/mpeg, crear Blob y reproducir
     const audioBlob = await response.blob();
     const audioUrl = URL.createObjectURL(audioBlob);
     const audio = new Audio(audioUrl);
 
-    // Restaurar UI al terminar
     audio.onended = () => {
-      btnAudio.disabled = false;
-      btnAudio.innerText = "Escuchar Prompt";
+      if (btnAudio) {
+        btnAudio.disabled = false;
+        btnAudio.innerText = "Escuchar Prompt";
+      }
       URL.revokeObjectURL(audioUrl);
     };
     audio.onerror = () => {
-      btnAudio.disabled = false;
-      btnAudio.innerText = "Escuchar Prompt";
-      alert("Error al reproducir el audio.");
+      if (btnAudio) {
+        btnAudio.disabled = false;
+        btnAudio.innerText = "Escuchar Prompt";
+      }
       URL.revokeObjectURL(audioUrl);
     };
 
     audio.play();
   } catch (err) {
-    btnAudio.disabled = false;
-    btnAudio.innerText = "Escuchar Prompt";
-    alert(err.message);
+    if (btnAudio) {
+      btnAudio.disabled = false;
+      btnAudio.innerText = "Escuchar Prompt";
+    }
+    console.error("Error TTS:", err);
   }
 }
 
-// 7. Event Listeners
-btnAnalyze.addEventListener("click", () => {
-  const text = promptInput.value.trim();
-  if (!text) return;
-  iterationCount = 1;
-  runAnalysis(text, iterationCount);
-});
-
-btnImprove.addEventListener("click", () => {
-  // Tomar el texto del input por si el usuario lo editó manualmente
-  const textToIterate = promptInput.value.trim() || currentImproved;
-  if (!textToIterate) return;
-  iterationCount++;
-  runAnalysis(textToIterate, iterationCount);
-});
-
-btnAudio.addEventListener("click", () => {
-  const textToRead = promptInput.value.trim() || currentImproved || currentOriginal;
-  if (textToRead) {
-    playTTS(textToRead);
+// Inicialización automática si el DOM está cargado
+if (typeof window !== "undefined") {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initDom);
+  } else {
+    initDom();
   }
-});
-
-if (btnClearHistory) {
-  btnClearHistory.addEventListener("click", () => {
-    localStorage.removeItem("prompt_history");
-    renderHistory();
-  });
 }
 
-// Render inicial
-renderHistory();
+// Exportación como módulo ES
+export {
+  runAnalysis,
+  updateUI,
+  setLoading,
+  saveToHistory,
+  renderHistory,
+  playTTS,
+  initDom
+};

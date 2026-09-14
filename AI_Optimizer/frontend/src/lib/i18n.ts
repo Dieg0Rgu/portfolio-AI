@@ -23,8 +23,29 @@ export const translations = {
     formatStructured: "Texto Estructurado",
     formatCode: "Código",
     formatTable: "Tabla",
+    formatStructuredLabel: "Estructurado",
+    formatCodeLabel: "Código",
+    formatTableLabel: "Tabla",
+    descMarkdown: "Encabezados, listas y negritas",
+    descJson: "Estructura estricta clave-valor",
+    descStructured: "Paso a paso numerado",
+    descCode: "Script o sintaxis técnica",
+    descTable: "Formato tabular comparativo",
     viewFormatted: "Vista Formateada",
     viewRaw: "Código / Raw",
+    
+    // Gateway status
+    gatewayActive: "NestJS Gateway: Activo",
+    gatewayDirect: "Python AI: Directo",
+
+    // Counters & details
+    charsLabel: "caracteres",
+    wordsLabel: "palabras",
+
+    // Audio
+    audioTooltip: "Reproducir síntesis de voz neural (Edge-TTS)",
+    audioTitle: "Audio",
+    audioErrorText: "No se pudo reproducir el audio neural.",
     
     // Bento Tiles Titles
     tilePromptInput: "ENTRADA & ACCIONES",
@@ -91,6 +112,25 @@ export const translations = {
     copySuccess: "Prompt mejorado copiado al portapapeles",
     transSuccess: "Prompt traducido correctamente",
     iterationLabel: "Iteración",
+
+    // Etiquetas adicionales y alertas
+    optimizedTokens: "Tokens Optimizados",
+    turnsLabel: "turnos",
+    tooltipOptimized: "Tokens consumidos con prompt optimizado",
+    tooltipSaved: "Tokens ahorrados por prompt engineering",
+    techniquesBadge: "Técnicas",
+    historySavingsBadge: "ahorro",
+    historyLoadBtn: "Cargar",
+    cacheLabel: "Caché Local",
+    scoreLabel: "Score",
+    emptyFieldTitle: "Campo vacío",
+    emptyFieldText: "Por favor ingresa un prompt para evaluar.",
+    analysisSuccessToast: "¡Análisis completado con éxito!",
+    analysisFailedToast: "Fallo en el análisis",
+    transErrorTitle: "Error al traducir",
+    transServiceError: "Error en el servicio de traducción",
+    understoodBtn: "Entendido",
+    langSwitched: "Idioma cambiado a Español",
   },
   en: {
     appTitle: "AI PROMPT ANALYSIS CONSOLE",
@@ -116,8 +156,29 @@ export const translations = {
     formatStructured: "Structured Text",
     formatCode: "Code",
     formatTable: "Table",
+    formatStructuredLabel: "Structured",
+    formatCodeLabel: "Code",
+    formatTableLabel: "Table",
+    descMarkdown: "Headers, lists and bold styling",
+    descJson: "Strict key-value schema",
+    descStructured: "Numbered step-by-step guidance",
+    descCode: "Technical script or syntax",
+    descTable: "Comparative tabular matrix",
     viewFormatted: "Formatted View",
     viewRaw: "Raw / Source",
+
+    // Gateway status
+    gatewayActive: "NestJS Gateway: Active",
+    gatewayDirect: "Python AI: Direct",
+
+    // Counters & details
+    charsLabel: "chars",
+    wordsLabel: "words",
+
+    // Audio
+    audioTooltip: "Play neural voice synthesis (Edge-TTS)",
+    audioTitle: "Audio",
+    audioErrorText: "Could not play neural audio.",
 
     // Bento Tiles Titles
     tilePromptInput: "INPUT & ACTIONS",
@@ -184,5 +245,24 @@ export const translations = {
     copySuccess: "Optimized prompt copied to clipboard",
     transSuccess: "Prompt translated successfully",
     iterationLabel: "Iteration",
+
+    // Additional labels and alerts
+    optimizedTokens: "Optimized Tokens",
+    turnsLabel: "turns",
+    tooltipOptimized: "Tokens consumed with optimized prompt",
+    tooltipSaved: "Tokens saved via prompt engineering",
+    techniquesBadge: "Techniques",
+    historySavingsBadge: "savings",
+    historyLoadBtn: "Load",
+    cacheLabel: "Local Cache",
+    scoreLabel: "Score",
+    emptyFieldTitle: "Empty field",
+    emptyFieldText: "Please enter a prompt to evaluate.",
+    analysisSuccessToast: "Analysis completed successfully!",
+    analysisFailedToast: "Analysis failed",
+    transErrorTitle: "Translation error",
+    transServiceError: "Error in translation service",
+    understoodBtn: "Got it",
+    langSwitched: "Language switched to English",
   }
 };

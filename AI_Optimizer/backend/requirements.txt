@@ -1,7 +1,25 @@
-fastapi>=0.110.0
-uvicorn[standard]>=0.28.0
-pydantic>=2.6.0
-httpx>=0.27.0
-python-dotenv>=1.0.1
-groq>=0.11.0
-google-genai>=1.0.0
+# ==============================================================================
+# AI Optimizer - Backend Dependencies
+# ==============================================================================
+
+# Core Web Framework & ASGI Server
+fastapi>=0.110.0,<1.0.0
+uvicorn[standard]>=0.28.0,<1.0.0
+
+# Data Validation & Serialization
+pydantic>=2.6.0,<3.0.0
+
+# HTTP Client & Environment Management
+httpx>=0.27.0,<1.0.0               # Cliente HTTP asíncrono para Ollama local
+python-dotenv>=1.0.1,<2.0.0        # Carga de variables de entorno (.env)
+
+# AI & LLM Provider SDKs
+groq>=0.11.0                       # Inferencia rápida Nivel 1 (Groq Cloud)
+google-genai>=1.0.0                # Respaldo Nivel 2 (Google Gemini API)
+
+# Audio & Text-to-Speech (TTS)
+edge-tts>=6.1.12                   # Generación de voz neural en /api/tts
+
+# Tokenization & Translation
+tiktoken>=0.7.0                    # Conteo y métricas de tokens (cl100k_base)
+deep-translator>=1.11.0            # Traducción multilingüe (GoogleTranslator)

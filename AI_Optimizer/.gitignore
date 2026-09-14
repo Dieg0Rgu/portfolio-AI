@@ -1,0 +1,28 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Python virtual environment
+venv/
+.venv/
+env/
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Node / Next / Nest artifacts
+node_modules/
+.next/
+dist/
+*.tsbuildinfo
+.npm/
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

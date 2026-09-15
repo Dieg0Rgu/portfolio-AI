@@ -36,12 +36,24 @@ from google.genai import types
 import tiktoken
 from deep_translator import GoogleTranslator
 
-TOKEN_ENCODER = tiktoken.get_encoding("cl100k_base")
+try:
+    TOKEN_ENCODER = tiktoken.get_encoding("cl100k_base")
+except Exception:
+    TOKEN_ENCODER = None
 
 def calculate_token_usage(prompt_text: str, completion_text: str) -> dict:
-    """Calcula el consumo de tokens usando la codificación cl100k_base."""
-    input_tokens = len(TOKEN_ENCODER.encode(prompt_text))
-    output_tokens = len(TOKEN_ENCODER.encode(completion_text))
+    """Calcula el consumo de tokens usando la codificación cl100k_base con fallback por aproximación."""
+    if TOKEN_ENCODER:
+        try:
+            input_tokens = len(TOKEN_ENCODER.encode(prompt_text))
+            output_tokens = len(TOKEN_ENCODER.encode(completion_text))
+        except Exception:
+            input_tokens = max(1, len(prompt_text) // 4)
+            output_tokens = max(1, len(completion_text) // 4)
+    else:
+        input_tokens = max(1, len(prompt_text) // 4)
+        output_tokens = max(1, len(completion_text) // 4)
+
     return {
         "input_tokens": input_tokens,
         "output_tokens": output_tokens,

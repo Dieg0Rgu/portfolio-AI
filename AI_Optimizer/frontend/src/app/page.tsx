@@ -141,8 +141,10 @@ export default function BentoDashboard() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             prompt: textToAnalyze,
+            output_format: outputFormat,
             formato_salida: outputFormat,
-            iteracion: currentIter,
+            iteration: currentIter,
+            target_lang: lang,
           }),
         });
       } catch {
@@ -154,8 +156,10 @@ export default function BentoDashboard() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             prompt: textToAnalyze,
+            output_format: outputFormat,
             formato_salida: outputFormat,
-            iteracion: currentIter,
+            iteration: currentIter,
+            target_lang: lang,
           }),
         });
       }

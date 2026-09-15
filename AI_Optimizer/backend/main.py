@@ -126,25 +126,37 @@ SYSTEM_PROMPT = """Eres un experto en Prompt Engineering y lingüística aplicad
 Tu tarea es analizar exhaustivamente el prompt de entrada, diagnosticar sus carencias estructurales, calcular métricas de calidad y producir una versión altamente optimizada y lista para producción en formato JSON estrictamente válido.
 
 Reglas lingüísticas y de contenido:
-1. "idioma": Detecta si el prompt original está en "Español" o "Inglés".
-2. "prompt_mejorado", "sugerencias" y "detalles_mejora": Deben redactarse exactamente en el MISMO idioma detectado en el prompt original.
+1. "idioma": Detecta si el prompt original o requerido está en "Español" o "Inglés" ("English").
+2. "prompt_mejorado", "sugerencias" y "detalles_mejora": Deben redactarse exactamente en el idioma objetivo ("Español" o "English").
 3. "tipo_prompt": Debe ser estrictamente uno de los siguientes valores: "Zero-Shot", "Few-Shot" o "Chain-of-Thought".
 4. "formato_salida": Respeta el formato solicitado o deduce el más adecuado: "Markdown", "JSON", "Texto Estructurado", "Código" o "Tabla".
-5. "prompt_mejorado" NUNCA debe ser una plantilla genérica corta ni un resumen superficial. Debe ser un prompt profesional, completo y estructurado con claridad meridiana usando secciones delimitadas:
-   - # ROL Y EXPERTOS: Define con precisión quién es la IA y su estándar de ejecución.
-   - # CONTEXTO Y OBJETIVO: Contexto situacional y meta principal.
-   - # DIRECTIVAS PASO A PASO: Instrucciones detalladas de cómo abordar la tarea.
-   - # RESTRICCIONES Y CASOS BORDE: Qué evitar, límites de extensión y prohibiciones estrictas.
-   - # ESQUEMA O FORMATO DE RESPUESTA: La estructura visual/sintáctica exacta en que debe responder según "formato_salida":
-     * Si "formato_salida" es "Tabla": DEBES modelar explícitamente una plantilla de tabla Markdown con columnas delimitadas por pipes (| Columna 1 | Columna 2 |) y divisores (|---|---|).
-     * Si "formato_salida" es "Código": DEBES ordenar la entrega en bloques de código delimitados (```lenguaje ... ```) o funciones técnicas.
-     * Si "formato_salida" es "JSON": DEBES definir el esquema estricto de claves y valores JSON entre llaves { ... }.
-     * Si "formato_salida" es "Texto Estructurado": DEBES estructurar la respuesta en pasos numerados secuenciales (1. 2. 3.).
-     * Si "formato_salida" es "Markdown": DEBES estructurar con encabezados jerárquicos (#, ##), listas y negritas.
+5. "prompt_mejorado" NUNCA debe ser una plantilla genérica corta ni un resumen superficial. Debe ser un prompt profesional, completo y estructurado con claridad meridiana usando secciones delimitadas según el idioma:
+   * SI EL IDIOMA ES ESPAÑOL:
+     - # ROL Y EXPERTOS: Define con precisión quién es la IA y su estándar de ejecución.
+     - # CONTEXTO Y OBJETIVO: Contexto situacional y meta principal.
+     - # DIRECTIVAS PASO A PASO: Instrucciones detalladas de cómo abordar la tarea.
+     - # RESTRICCIONES Y CASOS BORDE: Qué evitar, límites de extensión y prohibiciones estrictas.
+     - # ESQUEMA O FORMATO DE RESPUESTA: La estructura visual/sintáctica exacta en que debe responder según "formato_salida":
+       * Si "formato_salida" es "Tabla": Plantilla de tabla Markdown (| Columna 1 | Columna 2 |) y divisores (|---|---|).
+       * Si "formato_salida" es "Código": Bloques de código delimitados (```lenguaje ... ```).
+       * Si "formato_salida" es "JSON": Esquema estricto de claves y valores JSON { ... }.
+       * Si "formato_salida" es "Texto Estructurado": Pasos numerados secuenciales (1. 2. 3.).
+       * Si "formato_salida" es "Markdown": Encabezados jerárquicos (#, ##), listas y negritas.
+   * IF THE LANGUAGE IS ENGLISH:
+     - # ROLE AND EXPERTS: Define with precision who the AI is and its standard of execution.
+     - # CONTEXT AND OBJECTIVE: Situational context and primary goal.
+     - # STEP-BY-STEP DIRECTIVES: Detailed instructions on how to approach the task.
+     - # CONSTRAINTS AND EDGE CASES: What to avoid, length limits, and strict prohibitions.
+     - # RESPONSE SCHEMA OR FORMAT: The exact visual/syntactic format to respond with according to "formato_salida":
+       * If "formato_salida" is "Tabla" or "Table": Markdown table template (| Column 1 | Column 2 |) with dividers (|---|---|).
+       * If "formato_salida" is "Código" or "Code": Delimited code blocks (```language ... ```).
+       * If "formato_salida" is "JSON": Strict JSON schema with keys and values { ... }.
+       * If "formato_salida" is "Texto Estructurado" or "Structured Text": Numbered sequential steps (1. 2. 3.).
+       * If "formato_salida" is "Markdown": Hierarchical headings (#, ##), bullet points, and bold styling.
 
 Estructura JSON requerida:
 {
-  "rol_detectado": "Rol identificado o deducido (ej. Consultor Estratégico en IA, Desarrollador Senior Fullstack)",
+  "rol_detectado": "Rol identificado o deducido (ej. Consultor Estratégico en IA / Senior Fullstack Developer)",
   "tipo_prompt": "Zero-Shot" | "Few-Shot" | "Chain-of-Thought",
   "idioma": "Español" | "Inglés",
   "formato_salida": "Markdown" | "JSON" | "Texto Estructurado" | "Código" | "Tabla",
@@ -153,7 +165,7 @@ Estructura JSON requerida:
     "falta_contexto": true/false,
     "falta_objetivo": true/false,
     "falta_restricciones": true/false,
-    "detalles": ["Lista concisa de deficiencias detectadas"]
+    "detalles": ["Lista concisa de deficiencias detectadas / Concise list of detected flaws"]
   },
   "scores": {
     "claridad": 0-100,
@@ -164,23 +176,23 @@ Estructura JSON requerida:
     "coherencia": 0-100,
     "calidad_general": 0-100
   },
-  "prompt_mejorado": "Texto estructurado profesional y completo con # ROL, # CONTEXTO, # DIRECTIVAS, # RESTRICCIONES y # FORMATO",
-  "sugerencias": "Recomendación estratégica sobre cómo iterar y evaluar este prompt",
+  "prompt_mejorado": "Texto estructurado profesional con secciones delimitadas (# ROL Y EXPERTOS o # ROLE AND EXPERTS, # CONTEXTO, etc.)",
+  "sugerencias": "Recomendación estratégica sobre cómo iterar y evaluar este prompt / Strategic recommendations for iterating",
   "detalles_mejora": {
-    "tecnicas_aplicadas": ["Role Prompting", "Delimitadores Estructurales", "Restricción Negativa"],
+    "tecnicas_aplicadas": ["Role Prompting", "Structural Delimiters", "Negative Constraints"],
     "mejoras_clave": [
-      "Se asignó un rol técnico delimitado con marco de referencia.",
-      "Se agregaron directivas paso a paso y criterios de validación.",
-      "Se fijaron restricciones explícitas de formato y tono."
+      "Se asignó un rol técnico delimitado / Assigned a precise technical role.",
+      "Se agregaron directivas paso a paso / Added step-by-step instructions.",
+      "Se fijaron restricciones explícitas de formato / Set explicit format constraints."
     ],
-    "impacto_estimado": "Reduce divagaciones y alucinaciones en un 65%, garantizando una respuesta directa al objetivo en 1 sola iteración.",
-    "proxima_accion": "Probar en entorno de ejecución con temperatura recomendada entre 0.2 y 0.4 para máxima fidelidad."
+    "impacto_estimado": "Reduce divagaciones y alucinaciones en un 65% / Reduces ambiguities by over 65%.",
+    "proxima_accion": "Probar en entorno con temperatura 0.2 a 0.4 / Test in runtime with temperature 0.2-0.4."
   }
 }
 
 Devuelve ÚNICAMENTE el objeto JSON plano sin delimitadores Markdown de bloque de código ni texto adicional."""
 
-DEFAULT_FALLBACK = {
+DEFAULT_FALLBACK_ES = {
     "rol_detectado": "Especialista en Prompt Engineering",
     "tipo_prompt": "Zero-Shot",
     "idioma": "Español",
@@ -213,9 +225,44 @@ DEFAULT_FALLBACK = {
     }
 }
 
+DEFAULT_FALLBACK_EN = {
+    "rol_detectado": "Prompt Engineering Specialist",
+    "tipo_prompt": "Zero-Shot",
+    "idioma": "Inglés",
+    "fallas": {
+        "ambiguedad": True,
+        "falta_contexto": True,
+        "falta_objetivo": True,
+        "falta_restricciones": True,
+        "detalles": ["The prompt lacks situational context, operational boundaries, and an explicit response structure."]
+    },
+    "scores": {
+        "claridad": 45,
+        "especificidad": 35,
+        "objetividad": 50,
+        "veracidad": 50,
+        "contexto": 30,
+        "coherencia": 60,
+        "calidad_general": 42
+    },
+    "sugerencias": "Clearly define the target audience, specify the expected response format, and add negative constraints to avoid generic answers.",
+    "detalles_mejora": {
+        "tecnicas_aplicadas": ["Role Prompting", "Markdown Delimiters", "Structured Directives", "Negative Constraints"],
+        "mejoras_clave": [
+            "Assigned an explicit technical role and reference framework.",
+            "Added step-by-step directives with actionable validation rules.",
+            "Established explicit response delimiters to avoid redundancy."
+        ],
+        "impacto_estimado": "Reduces clarification cycles by over 70% and maximizes first-turn precision.",
+        "proxima_accion": "Test in target runtime environment with temperature set to 0.3 for optimal consistency."
+    }
+}
 
-def sanitize_and_parse_json(raw_text: str, original_prompt: str, expected_format: str = "Markdown") -> dict:
-    """Extrae el primer bloque JSON delimitado por llaves, sanea los tipos y completa campos ausentes."""
+DEFAULT_FALLBACK = DEFAULT_FALLBACK_ES
+
+
+def sanitize_and_parse_json(raw_text: str, original_prompt: str, expected_format: str = "Markdown", is_english: bool = False) -> dict:
+    """Extrae el primer bloque JSON delimitado por llaves, sanea los tipos y completa campos ausentes con soporte bilingüe."""
     match = re.search(r"\{.*\}", raw_text, re.DOTALL)
     clean_text = match.group(0) if match else raw_text
 
@@ -224,31 +271,36 @@ def sanitize_and_parse_json(raw_text: str, original_prompt: str, expected_format
     except json.JSONDecodeError:
         data = {}
 
+    detected_lang = str(data.get("idioma", "")).lower()
+    use_en = is_english or detected_lang in ["inglés", "ingles", "english", "en"]
+    fallback = DEFAULT_FALLBACK_EN if use_en else DEFAULT_FALLBACK_ES
+
+    fallback_prompt_improved = (
+        f"Act as a domain expert. Provide a technical, structured, and comprehensive response on: {original_prompt}"
+        if use_en else
+        f"Actúa como un experto. Elabora una respuesta técnica, estructurada y persuasiva sobre: {original_prompt}"
+    )
+
     result = {
         "prompt_original": original_prompt,
-        "rol_detectado": str(data.get("rol_detectado", DEFAULT_FALLBACK["rol_detectado"])),
-        "tipo_prompt": str(data.get("tipo_prompt", DEFAULT_FALLBACK["tipo_prompt"])),
-        "idioma": str(data.get("idioma", DEFAULT_FALLBACK["idioma"])),
+        "rol_detectado": str(data.get("rol_detectado", fallback["rol_detectado"])),
+        "tipo_prompt": str(data.get("tipo_prompt", fallback["tipo_prompt"])),
+        "idioma": str(data.get("idioma", fallback["idioma"])),
         "formato_salida": str(data.get("formato_salida", expected_format)),
-        "fallas": data.get("fallas") if isinstance(data.get("fallas"), dict) else DEFAULT_FALLBACK["fallas"],
-        "scores": data.get("scores") if isinstance(data.get("scores"), dict) else DEFAULT_FALLBACK["scores"],
-        "prompt_mejorado": str(
-            data.get(
-                "prompt_mejorado",
-                f"Actúa como un experto. Elabora una respuesta técnica, estructurada y persuasiva sobre: {original_prompt}"
-            )
-        ),
-        "sugerencias": str(data.get("sugerencias", DEFAULT_FALLBACK["sugerencias"]))
+        "fallas": data.get("fallas") if isinstance(data.get("fallas"), dict) else fallback["fallas"],
+        "scores": data.get("scores") if isinstance(data.get("scores"), dict) else fallback["scores"],
+        "prompt_mejorado": str(data.get("prompt_mejorado", fallback_prompt_improved)),
+        "sugerencias": str(data.get("sugerencias", fallback["sugerencias"]))
     }
 
     # Validación estricta de subcampos requeridos en fallas
     expected_flaws = ["ambiguedad", "falta_contexto", "falta_objetivo", "falta_restricciones"]
     for flaw in expected_flaws:
         if not isinstance(result["fallas"].get(flaw), bool):
-            result["fallas"][flaw] = DEFAULT_FALLBACK["fallas"][flaw]
+            result["fallas"][flaw] = fallback["fallas"][flaw]
 
     if not isinstance(result["fallas"].get("detalles"), list):
-        result["fallas"]["detalles"] = DEFAULT_FALLBACK["fallas"]["detalles"]
+        result["fallas"]["detalles"] = fallback["fallas"]["detalles"]
 
     # Validación y clamp (0-100) en todos los scores requeridos
     expected_scores = ["claridad", "especificidad", "objetividad", "veracidad", "contexto", "coherencia", "calidad_general"]
@@ -257,7 +309,7 @@ def sanitize_and_parse_json(raw_text: str, original_prompt: str, expected_format
         if isinstance(val, (int, float)):
             result["scores"][key] = max(0, min(100, int(val)))
         else:
-            result["scores"][key] = DEFAULT_FALLBACK["scores"][key]
+            result["scores"][key] = fallback["scores"][key]
 
     # Procesar detalles de mejora enriquecidos
     detalles_raw = data.get("detalles_mejora")
@@ -265,18 +317,18 @@ def sanitize_and_parse_json(raw_text: str, original_prompt: str, expected_format
         tecnicas = detalles_raw.get("tecnicas_aplicadas")
         mejoras = detalles_raw.get("mejoras_clave")
         result["detalles_mejora"] = {
-            "tecnicas_aplicadas": [str(x) for x in tecnicas] if isinstance(tecnicas, list) and tecnicas else DEFAULT_FALLBACK["detalles_mejora"]["tecnicas_aplicadas"],
-            "mejoras_clave": [str(x) for x in mejoras] if isinstance(mejoras, list) and mejoras else DEFAULT_FALLBACK["detalles_mejora"]["mejoras_clave"],
-            "impacto_estimado": str(detalles_raw.get("impacto_estimado", DEFAULT_FALLBACK["detalles_mejora"]["impacto_estimado"])),
-            "proxima_accion": str(detalles_raw.get("proxima_accion", DEFAULT_FALLBACK["detalles_mejora"]["proxima_accion"])),
+            "tecnicas_aplicadas": [str(x) for x in tecnicas] if isinstance(tecnicas, list) and tecnicas else fallback["detalles_mejora"]["tecnicas_aplicadas"],
+            "mejoras_clave": [str(x) for x in mejoras] if isinstance(mejoras, list) and mejoras else fallback["detalles_mejora"]["mejoras_clave"],
+            "impacto_estimado": str(detalles_raw.get("impacto_estimado", fallback["detalles_mejora"]["impacto_estimado"])),
+            "proxima_accion": str(detalles_raw.get("proxima_accion", fallback["detalles_mejora"]["proxima_accion"])),
         }
     else:
-        result["detalles_mejora"] = DEFAULT_FALLBACK["detalles_mejora"]
+        result["detalles_mejora"] = fallback["detalles_mejora"]
 
     return result
 
 
-async def call_gemini(user_message: str, original_prompt: str) -> str | None:
+async def call_gemini(user_message: str, original_prompt: str, is_english: bool = False) -> dict | None:
     """Ejecuta la inferencia con Gemini forzando salida JSON (cliente async)."""
     keys = get_gemini_api_keys()
     if not keys:
@@ -300,7 +352,7 @@ async def call_gemini(user_message: str, original_prompt: str) -> str | None:
                 timeout=MAX_ANALYSIS_TIME,
             )
             print("[RESPALDO]: Inferencia completada con Gemini.")
-            return sanitize_and_parse_json(response.text, original_prompt)
+            return sanitize_and_parse_json(response.text, original_prompt, is_english=is_english)
         except Exception as e:
             print(f"[AVISO]: Gemini Key #{idx + 1} falló: {type(e).__name__}: {e}")
             continue
@@ -316,7 +368,7 @@ def _retry_seconds(err: Exception) -> float:
     return 0.0
 
 
-async def call_groq(user_message: str, original_prompt: str) -> str | None:
+async def call_groq(user_message: str, original_prompt: str, is_english: bool = False) -> dict | None:
     """Itera sobre las claves de Groq con reintento acotado ante 429 (rate limit)."""
     for idx, key in enumerate(get_groq_api_keys()):
         client = AsyncGroq(api_key=key, timeout=MAX_ANALYSIS_TIME, max_retries=0)
@@ -334,7 +386,7 @@ async def call_groq(user_message: str, original_prompt: str) -> str | None:
                     response_format={"type": "json_object"}
                 )
                 raw_response = chat_completion.choices[0].message.content
-                result = sanitize_and_parse_json(raw_response, original_prompt)
+                result = sanitize_and_parse_json(raw_response, original_prompt, is_english=is_english)
                 if result:
                     print("[EXITO]: Inferencia completada con Groq.")
                     return result
@@ -353,7 +405,7 @@ async def call_groq(user_message: str, original_prompt: str) -> str | None:
     return None
 
 
-async def _first_success(user_message: str, original_prompt: str) -> str | None:
+async def _first_success(user_message: str, original_prompt: str, is_english: bool = False) -> dict | None:
     """Responde en el menor tiempo posible: Groq primero (ultrarrápido).
 
     Gemini solo se lanza como respaldo si Groq no respondió en MAX_GRACE_TIME,
@@ -366,16 +418,16 @@ async def _first_success(user_message: str, original_prompt: str) -> str | None:
     if not groq_keys and not gemini_keys:
         return None
     if not groq_keys:
-        return await asyncio.wait_for(call_gemini(user_message, original_prompt), MAX_ANALYSIS_TIME)
+        return await asyncio.wait_for(call_gemini(user_message, original_prompt, is_english=is_english), MAX_ANALYSIS_TIME)
 
     deadline = time.monotonic() + MAX_ANALYSIS_TIME
-    groq_task = asyncio.create_task(call_groq(user_message, original_prompt))
+    groq_task = asyncio.create_task(call_groq(user_message, original_prompt, is_english=is_english))
     gemini_task = None
 
     def _start_gemini():
         nonlocal gemini_task
         if gemini_task is None and gemini_keys:
-            gemini_task = asyncio.create_task(call_gemini(user_message, original_prompt))
+            gemini_task = asyncio.create_task(call_gemini(user_message, original_prompt, is_english=is_english))
 
     tasks = [groq_task]
     try:
@@ -420,10 +472,28 @@ async def _first_success(user_message: str, original_prompt: str) -> str | None:
 @app.post("/api/analyze", response_model=AnalysisResponse)
 async def analyze_prompt(payload: PromptAnalysisRequest):
     fmt = payload.output_format or "Markdown"
-    user_message = f"Prompt original a evaluar: \"{payload.prompt}\"\nIteración: {payload.iteration}\nFormato de salida esperado para el resultado: {fmt}"
+    target_lang = (payload.target_lang or "es").lower()
+    is_english = target_lang in ["en", "english", "inglés", "ingles"]
+
+    if is_english:
+        user_message = (
+            f"Original prompt to evaluate: \"{payload.prompt}\"\n"
+            f"Iteration: {payload.iteration}\n"
+            f"Expected output format for result: {fmt}\n"
+            f"CRITICAL INSTRUCTION: Deliver the entire JSON response strictly in ENGLISH. "
+            f"The 'prompt_mejorado' MUST use English section titles: # ROLE AND EXPERTS, # CONTEXT AND OBJECTIVE, # STEP-BY-STEP DIRECTIVES, # CONSTRAINTS AND EDGE CASES, and # RESPONSE SCHEMA OR FORMAT. "
+            f"The 'sugerencias' (Actionable Suggestions) and 'detalles_mejora' must also be written in fluent ENGLISH."
+        )
+    else:
+        user_message = (
+            f"Prompt original a evaluar: \"{payload.prompt}\"\n"
+            f"Iteración: {payload.iteration}\n"
+            f"Formato de salida esperado para el resultado: {fmt}\n"
+            f"Requisito de idioma: Entrega toda la respuesta en Español, utilizando encabezados como # ROL Y EXPERTOS, # CONTEXTO Y OBJETIVO, # DIRECTIVAS PASO A PASO, etc."
+        )
 
     # NIVEL 1 y 2: GROQ y GEMINI en paralelo (respuesta del más rápido)
-    result = await _first_success(user_message, payload.prompt)
+    result = await _first_success(user_message, payload.prompt, is_english=is_english)
     if result:
         result["formato_salida"] = fmt
         tokens_info = calculate_token_usage(payload.prompt, result.get("prompt_mejorado", ""))
@@ -458,7 +528,7 @@ async def analyze_prompt(payload: PromptAnalysisRequest):
             res.raise_for_status()
             raw_response = res.json().get("message", {}).get("content", "")
             print("[EXITO]: Inferencia completada con Ollama local.")
-            parsed = sanitize_and_parse_json(raw_response, payload.prompt, fmt)
+            parsed = sanitize_and_parse_json(raw_response, payload.prompt, fmt, is_english=is_english)
             parsed["formato_salida"] = fmt
             tokens_info = calculate_token_usage(payload.prompt, parsed.get("prompt_mejorado", ""))
             parsed["tokens"] = tokens_info

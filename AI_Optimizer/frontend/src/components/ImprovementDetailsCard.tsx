@@ -68,8 +68,19 @@ export const ImprovementDetailsCard: React.FC<ImprovementDetailsCardProps> = ({
           </div>
         )}
 
+        {/* Actionable Suggestions / Strategic Guidance */}
+        {sugerencias && (
+          <div className="mb-3 p-3 rounded-xl bg-[#050e0c] border border-bento-border/60 text-xs leading-relaxed">
+            <p className="text-[10px] font-mono uppercase text-bento-mint font-semibold mb-1 flex items-center gap-1.5">
+              <Lightbulb className="w-3.5 h-3.5 text-bento-emerald" />
+              {t.strategicGuidance || t.tileSuggestions}
+            </p>
+            <p className="text-bento-text/90 whitespace-pre-line">{sugerencias}</p>
+          </div>
+        )}
+
         {/* Key Improvements */}
-        {detalles?.mejoras_clave && detalles.mejoras_clave.length > 0 ? (
+        {detalles?.mejoras_clave && detalles.mejoras_clave.length > 0 && (
           <div className="space-y-1.5 mb-3">
             <p className="text-[10px] font-mono uppercase text-bento-muted mb-1">
               {t.keyImprovements}
@@ -81,12 +92,6 @@ export const ImprovementDetailsCard: React.FC<ImprovementDetailsCardProps> = ({
               </div>
             ))}
           </div>
-        ) : (
-          sugerencias && (
-            <div className="text-xs text-bento-muted leading-relaxed whitespace-pre-line p-3 rounded-lg bg-[#050e0c] border border-bento-border/50">
-              {sugerencias}
-            </div>
-          )
         )}
       </div>
 

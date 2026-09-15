@@ -65,6 +65,21 @@ export const ResultCard: React.FC<ResultCardProps> = ({
     }
 
     // Formateo visual tipo Markdown / Tablas / Bloques
+    const renderInline = (text: string) => {
+      if (!text.includes("**")) return text;
+      const parts = text.split(/(\*\*.*?\*\*)/g);
+      return parts.map((part, pIdx) => {
+        if (part.startsWith("**") && part.endsWith("**")) {
+          return (
+            <strong key={pIdx} className="font-semibold text-white">
+              {part.slice(2, -2)}
+            </strong>
+          );
+        }
+        return part;
+      });
+    };
+
     const lines = content.split("\n");
     return (
       <div className="space-y-2 text-xs md:text-sm font-mono text-[#e3f3ee] leading-relaxed">
@@ -72,14 +87,14 @@ export const ResultCard: React.FC<ResultCardProps> = ({
           const l = line.trim();
           if (!l) return <div key={idx} className="h-2" />;
 
-          // Encabezados Markdown (# ROL Y EXPERTOS, etc.)
+          // Encabezados Markdown (# ROL Y EXPERTOS, # ROLE AND EXPERTS, etc.)
           if (l.startsWith("### ")) {
             return (
               <h4
                 key={idx}
                 className="text-sm font-bold text-emerald-300 pt-2 border-b border-bento-emerald/20 pb-1"
               >
-                {l.replace("### ", "")}
+                {renderInline(l.replace("### ", ""))}
               </h4>
             );
           }
@@ -89,14 +104,14 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                 key={idx}
                 className="text-base font-bold text-bento-mint pt-2 border-b border-bento-emerald/30 pb-1"
               >
-                {l.replace("## ", "")}
+                {renderInline(l.replace("## ", ""))}
               </h3>
             );
           }
           if (l.startsWith("# ")) {
             return (
               <h2 key={idx} className="text-lg font-extrabold text-white pt-3 text-bento-mint">
-                {l.replace("# ", "")}
+                {renderInline(l.replace("# ", ""))}
               </h2>
             );
           }
@@ -106,7 +121,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
             return (
               <div key={idx} className="flex items-start gap-2 pl-2">
                 <span className="text-bento-emerald font-bold">•</span>
-                <span>{l.substring(2)}</span>
+                <span>{renderInline(l.substring(2))}</span>
               </div>
             );
           }
@@ -117,7 +132,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
             return (
               <div key={idx} className="flex items-start gap-2 pl-2">
                 <span className="text-bento-mint font-bold">{matchNum[1]}</span>
-                <span>{matchNum[2]}</span>
+                <span>{renderInline(matchNum[2])}</span>
               </div>
             );
           }
@@ -139,7 +154,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                     key={cIdx}
                     className="flex-1 text-xs font-mono text-[#d8eae4] border-r border-bento-emerald/10 last:border-r-0 pr-2"
                   >
-                    {cell}
+                    {renderInline(cell)}
                   </div>
                 ))}
               </div>
@@ -155,7 +170,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
             );
           }
 
-          return <p key={idx} className="text-[#d8eae4]">{l}</p>;
+          return <p key={idx} className="text-[#d8eae4]">{renderInline(l)}</p>;
         })}
       </div>
     );

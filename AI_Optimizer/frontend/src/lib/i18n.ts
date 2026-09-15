@@ -131,6 +131,7 @@ export const translations = {
     transServiceError: "Error en el servicio de traducción",
     understoodBtn: "Entendido",
     langSwitched: "Idioma cambiado a Español",
+    strategicGuidance: "Recomendaciones Accionables",
   },
   en: {
     appTitle: "AI PROMPT ANALYSIS CONSOLE",
@@ -264,5 +265,6 @@ export const translations = {
     transServiceError: "Error in translation service",
     understoodBtn: "Got it",
     langSwitched: "Language switched to English",
+    strategicGuidance: "Actionable Recommendations",
   }
 };

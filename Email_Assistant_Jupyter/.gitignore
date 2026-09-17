@@ -1,11 +1,12 @@
-# Entorno virtual
-venv/
-.env
+# Sesiones y perfiles de navegador
+gmail_session_v2/
 
-# Jupyter & Python cache
+# Entornos y notebooks
+venv/
 .ipynb_checkpoints/
 __pycache__/
 *.pyc
+
 
 # Archivos de sistema / IDE
 .DS_Store

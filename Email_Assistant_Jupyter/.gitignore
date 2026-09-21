@@ -1,13 +1,21 @@
 # Sesiones y perfiles de navegador
 gmail_session_v2/
 
-# Entornos y notebooks
+# Entornos virtuales
 venv/
+.venv/
+
+# Secretos
+.env
+.env.*
+
+# Entornos y notebooks
 .ipynb_checkpoints/
 __pycache__/
-*.pyc
-
+*.py[cod]
 
 # Archivos de sistema / IDE
 .DS_Store
+Thumbs.db
 .vscode/
+.idea/

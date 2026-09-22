@@ -61,3 +61,5 @@ fastapi
 uvicorn[standard]
 python-dotenv
 aiosmtplib
+pydantic-settings
+email-validator

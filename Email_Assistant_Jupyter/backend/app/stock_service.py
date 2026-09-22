@@ -1,101 +1,96 @@
-"""Service layer for fetching stock data and generating analysis.
+"""Service layer for fetching stock data and generating analysis and charts.
 
-The functions are deliberately async‑compatible: heavy I/O (yfinance download
-and matplotlib rendering) is delegated to a thread‑pool via
-``asyncio.to_thread`` so FastAPI can keep its event‑loop responsive.
+I/O operations (yfinance downloading, matplotlib plotting, and file reading)
+are offloaded to a thread pool via asyncio.to_thread to keep FastAPI's event loop non-blocking.
 """
 
-import io
-import os
 import asyncio
+import base64
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 
-import yfinance as yf
+import os
+os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
+
 import matplotlib
-
-# Use a non‑interactive backend suitable for headless environments
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import pandas as pd
+import yfinance as yf
 
 from .config import STATIC_DIR
 
-async def fetch_data(ticker: str, period: str = "6mo") -> yf.Ticker:
-    """Download historical data for *ticker* over *period*.
 
-    Returns the ``yfinance.Ticker`` object (which holds a ``pandas.DataFrame``
-    at ``ticker.history``).  The operation runs in a thread pool because
-    ``yfinance`` performs blocking network I/O.
-    """
-    # ``yf.Ticker`` itself is lightweight; the heavy work is in ``history``
+async def fetch_data(ticker: str, period: str = "6mo") -> pd.DataFrame:
+    """Download historical stock data using yfinance in a worker thread."""
     def _download():
-        return yf.download([ticker], period=period)
+        t = yf.Ticker(ticker.strip().upper())
+        df = t.history(period=period)
+        return df
 
     data = await asyncio.to_thread(_download)
+    if data is None or data.empty:
+        raise ValueError(f"No se encontraron datos para la acción '{ticker}' con periodo '{period}'.")
     return data
 
-async def analyze(data) -> Dict[str, float]:
-    """Compute basic statistics from the dataframe.
 
-    Expects a ``pandas.DataFrame`` with at least ``Close`` column.
-    Returns a dict with ``max``, ``min``, ``mean`` and ``current`` (latest
-    closing price).
-    """
-    # Guard against empty data
-    if data.empty:
-        raise ValueError("No price data returned for the given ticker/period.")
+async def analyze(data: pd.DataFrame) -> Dict[str, float]:
+    """Compute summary statistics (max, min, mean, current) from price data."""
+    if "Close" not in data.columns or data["Close"].dropna().empty:
+        raise ValueError("El conjunto de datos no contiene una columna 'Close' válida.")
 
-    close_series = data["Close"]
+    close_series = data["Close"].dropna()
     result = {
-        "max": round(close_series.max(), 2),
-        "min": round(close_series.min(), 2),
-        "mean": round(close_series.mean(), 2),
-        "current": round(close_series.iloc[-1], 2),
+        "max": float(round(close_series.max(), 2)),
+        "min": float(round(close_series.min(), 2)),
+        "mean": float(round(close_series.mean(), 2)),
+        "current": float(round(close_series.iloc[-1], 2)),
     }
     return result
 
-async def generate_chart(data, column: str, ticker: str) -> str:
-    """Create a PNG chart for *column* (e.g. ``"Close"``) and save it.
 
-    The image is saved under ``STATIC_DIR`` with a name that includes the
-    ticker and the column, e.g. ``close_AAPL.png``.  The function returns the
-    absolute file path as a string.
-    """
+async def generate_chart(data: pd.DataFrame, column: str, ticker: str) -> str:
+    """Generate a PNG chart for the specified column and save it under STATIC_DIR."""
     if column not in data.columns:
-        raise ValueError(f"Column '{column}' not present in the data.")
+        raise ValueError(f"La columna '{column}' no está presente en los datos.")
 
-    fig, ax = plt.subplots(figsize=(8, 4))
-    ax.plot(data.index, data[column], label=column)
-    ax.set_title(f"{ticker} – {column} price (last 6 months)")
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Price (USD)")
-    ax.grid(True)
-    ax.legend()
-
-    filename = f"{column.lower()}_{ticker.upper()}.png"
+    ticker_upper = ticker.strip().upper()
+    filename = f"{column.lower()}_{ticker_upper}.png"
     filepath = STATIC_DIR / filename
-    # Save to PNG
-    await asyncio.to_thread(fig.savefig, filepath, format="png", bbox_inches="tight")
-    plt.close(fig)
+
+    def _plot_and_save():
+        fig, ax = plt.subplots(figsize=(8, 4))
+        ax.plot(data.index, data[column], label=f"{column} Price", color="#1f77b4", linewidth=1.8)
+        ax.set_title(f"{ticker_upper} – {column} ({len(data)} periodos)", fontsize=12, fontweight="bold")
+        ax.set_xlabel("Fecha")
+        ax.set_ylabel("Precio (USD)")
+        ax.grid(True, linestyle="--", alpha=0.6)
+        ax.legend()
+        fig.tight_layout()
+        fig.savefig(filepath, format="png", dpi=100)
+        plt.close(fig)
+
+    await asyncio.to_thread(_plot_and_save)
     return str(filepath)
 
-async def prepare_analysis(ticker: str, period: str = "6mo") -> Tuple[Dict[str, float], str, str]:
-    """Convenience wrapper returning analysis dict and two chart paths.
 
-    Returns ``(stats, close_chart_path, high_chart_path)``.
-    """
-    data = await fetch_data(ticker, period)
+async def prepare_analysis(ticker: str, period: str = "6mo") -> Tuple[Dict[str, float], str, Optional[str]]:
+    """Fetch data, compute statistics, and render chart images."""
+    clean_ticker = ticker.strip().upper()
+    data = await fetch_data(clean_ticker, period)
     stats = await analyze(data)
-    close_path = await generate_chart(data, "Close", ticker)
-    # Some tickers may not have a High column (e.g., missing data). Guard.
-    high_path = ""
-    if "High" in data.columns:
-        high_path = await generate_chart(data, "High", ticker)
+
+    close_path = await generate_chart(data, "Close", clean_ticker)
+    high_path = None
+    if "High" in data.columns and not data["High"].dropna().empty:
+        high_path = await generate_chart(data, "High", clean_ticker)
+
     return stats, close_path, high_path
 
-# Helper to encode a file to base64 (used for API response)
-import base64
 
-def file_to_base64(path: str) -> str:
+def file_to_base64(path: Optional[str]) -> Optional[str]:
+    """Convert an image file to a base64 encoded string."""
+    if not path or not Path(path).is_file():
+        return None
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")

@@ -1,0 +1,165 @@
+{
+  "name": "Asistente Financiero - Análisis y Envío de Correo",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 18 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "1",
+      "name": "Disparador Programado (L-V 18:00)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "ticker",
+              "value": "AAPL"
+            },
+            {
+              "name": "period",
+              "value": "6mo"
+            },
+            {
+              "name": "recipient",
+              "value": "destinatario@correo.com"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2",
+      "name": "Configuración Parámetros",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        420,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://email_assistant:8000/analyse",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "my_secure_api_key_123"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"ticker\": \"{{ $json.ticker }}\",\n  \"period\": \"{{ $json.period }}\",\n  \"include_charts\": true\n}",
+        "options": {}
+      },
+      "id": "3",
+      "name": "HTTP Request (FastAPI /analyse)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        640,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrae los datos devueltos por FastAPI y prepara la gráfica binaria para el email\nconst item = $input.first().json;\nconst params = $('Configuración Parámetros').first().json;\n\nconst ticker = item.ticker;\nconst current = item.current;\nconst max = item.max;\nconst min = item.min;\nconst mean = item.mean;\nconst period = item.period;\nconst recipient = params.recipient;\n\n// Construye el HTML enriquecido del correo\nconst emailHtml = `\n<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <style>\n    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }\n    .container { max-width: 600px; margin: auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }\n    .header { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: #ffffff; padding: 25px 20px; text-align: center; }\n    .header h1 { margin: 0; font-size: 22px; }\n    .content { padding: 25px; }\n    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }\n    .stat-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 15px; }\n    .stat-title { font-size: 12px; color: #64748b; text-transform: uppercase; margin-bottom: 5px; }\n    .stat-value { font-size: 18px; font-weight: bold; color: #0f172a; }\n    .stat-value.current { color: #16a34a; }\n    .chart-container { margin-top: 25px; text-align: center; }\n    .chart-container img { max-width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; }\n    .footer { text-align: center; padding: 15px; font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1>Reporte Financiero Automatizado</h1>\n      <p style=\"margin: 5px 0 0 0; opacity: 0.9;\">Acción: <strong>${ticker}</strong> | Últimos <strong>${period}</strong></p>\n    </div>\n    <div class=\"content\">\n      <div class=\"stats-grid\">\n        <div class=\"stat-card\">\n          <div class=\"stat-title\">Precio Actual</div>\n          <div class=\"stat-value current\">$${current}</div>\n        </div>\n        <div class=\"stat-card\">\n          <div class=\"stat-title\">Precio Promedio</div>\n          <div class=\"stat-value\">$${mean}</div>\n        </div>\n        <div class=\"stat-card\">\n          <div class=\"stat-title\">Máximo Periodo</div>\n          <div class=\"stat-value\">$${max}</div>\n        </div>\n        <div class=\"stat-card\">\n          <div class=\"stat-title\">Mínimo Periodo</div>\n          <div class=\"stat-value\">$${min}</div>\n        </div>\n      </div>\n      <div class=\"chart-container\">\n        <h3 style=\"color: #334155; margin-bottom: 10px;\">Evolución de Precios de Cierre</h3>\n        <img src=\"data:image/png;base64,${item.close_chart_base64}\" alt=\"Gráfica ${ticker}\" />\n      </div>\n    </div>\n    <div class=\"footer\">\n      Generado por FastAPI & n8n • Asistente Financiero\n    </div>\n  </div>\n</body>\n</html>\n`;\n\nreturn [\n  {\n    json: {\n      ticker,\n      period,\n      recipient,\n      subject: `📈 Reporte Bursátil: ${ticker} ($${current} USD)`,\n      emailHtml\n    }\n  }\n];"
+      },
+      "id": "4",
+      "name": "Formateador HTML y Datos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.recipient }}",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.emailHtml }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "5",
+      "name": "Enviar Correo (Gmail / SMTP)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1080,
+        280
+      ]
+    }
+  ],
+  "connections": {
+    "Disparador Programado (L-V 18:00)": {
+      "main": [
+        [
+          {
+            "node": "Configuración Parámetros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuración Parámetros": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request (FastAPI /analyse)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request (FastAPI /analyse)": {
+      "main": [
+        [
+          {
+            "node": "Formateador HTML y Datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formateador HTML y Datos": {
+      "main": [
+        [
+          {
+            "node": "Enviar Correo (Gmail / SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
